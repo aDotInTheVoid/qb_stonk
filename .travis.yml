@@ -14,5 +14,6 @@ install:
     - echo ""
  
 script:
+    - cargo clippy -- -D clippy::all
     - cargo build
     - cargo test
