@@ -1,6 +1,12 @@
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
+
+mod business;
+mod	discord;
+mod	groger;
+mod	user;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Portfolio{
     shares: HashMap<String, u64>,
