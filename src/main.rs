@@ -19,10 +19,6 @@ struct MarketSnapshot {
     prices: HashMap<String, f64>,
 }
 
-fn get_prices_url_interactive() {
-    let mut url = String::new();
-}
-
 fn main() {
     let text =
         reqwest::get("https://grogerranks.com/2019/06/11/2019-post-nationals-overall-rankings/")
