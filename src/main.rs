@@ -1,6 +1,8 @@
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use serde_json;
+
 
 mod business;
 mod discord;
@@ -25,6 +27,11 @@ fn main() {
             .unwrap()
             .text()
             .unwrap();
-    let hs = groger::parse_groger_post(&text);
-    dbg!(hs);
+    let hs: HashMap<String, (i16, f32)> = groger::parse_groger_post(&text).unwrap();
+    
+    let js = serde_json::to_string_pretty(&hs).unwrap();
+    println!("{}", &js);
+    let hs2: HashMap<String, (i16, f32)> = serde_json::from_str(&js).unwrap();
+
+    assert_eq!(hs, hs2);
 }
