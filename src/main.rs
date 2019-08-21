@@ -1,13 +1,17 @@
+use std::collections::HashMap;
+use std::env;
+
 use reqwest;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use serde_json;
-
+use serenity::prelude::*;
 
 mod business;
 mod discord;
 mod groger;
 mod user;
+
+use discord::Handler;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Portfolio {
@@ -22,16 +26,18 @@ struct MarketSnapshot {
 }
 
 fn main() {
-    let text =
-        reqwest::get("https://grogerranks.com/2019/06/11/2019-post-nationals-overall-rankings/")
-            .unwrap()
-            .text()
-            .unwrap();
-    let hs: HashMap<String, (i16, f32)> = groger::parse_groger_post(&text).unwrap();
-    
-    let js = serde_json::to_string_pretty(&hs).unwrap();
-    println!("{}", &js);
-    let hs2: HashMap<String, (i16, f32)> = serde_json::from_str(&js).unwrap();
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
-    assert_eq!(hs, hs2);
+    // Create a new instance of the Client, logging in as a bot. This will
+    // automatically prepend your bot token with "Bot ", which is a requirement
+    // by Discord for bot users.
+    let mut client = Client::new(&token, Handler).expect("Err creating client");
+
+    // Finally, start a single shard, and start listening to events.
+    //
+    // Shards will automatically attempt to reconnect, and will perform
+    // exponential backoff until it reconnects.
+    if let Err(why) = client.start() {
+        println!("Client error: {:?}", why);
+    }
 }

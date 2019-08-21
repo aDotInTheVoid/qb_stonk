@@ -42,7 +42,6 @@ pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (i16, f32)
         let rank: i16 = e2none(elems[0].parse()).unwrap();
         let weight: f32 = e2none(elems[2].parse()).unwrap();
         ret.insert(name, (rank, weight));
-        
     }
 
     Some(ret)
