@@ -5,6 +5,9 @@ use serenity::{
 
 use crate::business;
 
+mod shutdown_sender;
+pub(crate) use self::shutdown_sender::shutdown_msg as send_sd_msg;
+
 // TODO: load dynamicly
 const TRADES_ID: ChannelId = ChannelId(603769735867400193);
 
@@ -38,8 +41,10 @@ impl EventHandler for Handler {
 
     fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
-        if let Err(why) = TRADES_ID.say(&ctx.http, "@everyone THE MARKET IS OPEN, GET YOUR STONKS")
-        {
+        if let Err(why) = TRADES_ID.say(
+            &ctx.http,
+            "@e_veryone THE MARKET IS OPEN, GET YOUR STONKS (not realy)",
+        ) {
             println!("Error sending message: {:?}", why);
         }
     }
