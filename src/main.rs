@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::env;
 use std::io::{stdin, stdout, Write};
+use std::sync::{Arc, Barrier};
 use std::thread;
 
 use reqwest;
@@ -13,8 +14,7 @@ mod discord;
 mod groger;
 mod user;
 
-use discord::send_sd_msg;
-use discord::Handler;
+use discord::{send_sd_msg, BarrierManager, Handler};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Portfolio {
@@ -30,11 +30,19 @@ struct MarketSnapshot {
 
 fn main() {
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let startbarier = Arc::new(Barrier::new(2));
 
     // Create client
     let mut client = Client::new(&token, Handler).expect("Err creating client");
     // Arc<Mutex<_>> of the shard (conection) manager to shutdown with later.
     let shardman = client.shard_manager.clone();
+
+    {
+        // do this in a auxilary thread to drop Lock on data
+        let mut data = client.data.write();
+        // Add the shardmanager to the client data
+        data.insert::<BarrierManager>(startbarier.clone());
+    }
 
     // Start the client in a new thread so main thread is free to capture input.
     let handle = thread::spawn(move || {
@@ -45,8 +53,7 @@ fn main() {
     });
 
     // This will block the tread until user confermation.
-    //TODO: Dont sleep.
-    thread::sleep(std::time::Duration::from_secs(2));
+    startbarier.wait();
     stdout().flush().unwrap();
     print!("Press enter to shutdown bot: ");
     stdout().flush().unwrap();

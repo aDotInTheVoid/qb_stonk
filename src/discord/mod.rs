@@ -1,3 +1,5 @@
+use std::sync::{Arc, Barrier};
+
 use serenity::{
     model::{channel::Message, gateway::Ready, id::ChannelId},
     prelude::*,
@@ -12,6 +14,11 @@ pub(crate) use self::shutdown_sender::shutdown_msg as send_sd_msg;
 const TRADES_ID: ChannelId = ChannelId(603769735867400193);
 
 pub(crate) struct Handler;
+pub(crate) struct BarrierManager;
+
+impl TypeMapKey for BarrierManager {
+    type Value = Arc<Barrier>;
+}
 
 impl EventHandler for Handler {
     // Set a handler for the `message` event - so that whenever a new message
@@ -41,11 +48,16 @@ impl EventHandler for Handler {
 
     fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+
+        // Send message to server anounsing our arrival.
         if let Err(why) = TRADES_ID.say(
             &ctx.http,
             "@e_veryone THE MARKET IS OPEN, GET YOUR STONKS (not realy)",
         ) {
             println!("Error sending message: {:?}", why);
         }
+
+        // Tell main thread were done.
+        ctx.data.read().get::<BarrierManager>().unwrap().wait();
     }
 }
