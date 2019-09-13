@@ -6,7 +6,6 @@ use std::thread;
 
 use reqwest;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use serenity::prelude::*;
 
 mod business;
@@ -14,23 +13,14 @@ mod discord;
 mod groger;
 mod user;
 
-use discord::{send_sd_msg, BarrierManager, Handler};
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Portfolio {
-    shares: HashMap<String, u64>,
-    dollars: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct MarketSnapshot {
-    traders: HashMap<String, Portfolio>,
-    prices: HashMap<String, f64>,
-}
+use business::BuisnessMan;
+use discord::{send_sd_msg, BarrierManager, BuisnessManManager, Handler};
 
 fn main() {
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token =
+        env::var("DISCORD_TOKEN").expect("Expected to find the environment variable DISCORD_TOKEN");
     let startbarier = Arc::new(Barrier::new(2));
+    let businessman = Arc::new(Mutex::new(BuisnessMan::new()));
 
     // Create client
     let mut client = Client::new(&token, Handler).expect("Err creating client");
@@ -38,10 +28,11 @@ fn main() {
     let shardman = client.shard_manager.clone();
 
     {
-        // do this in a auxilary thread to drop Lock on data
+        // do this in a auxilary scope to drop Lock on data
         let mut data = client.data.write();
         // Add the shardmanager to the client data
         data.insert::<BarrierManager>(startbarier.clone());
+        data.insert::<BuisnessManManager>(businessman.clone());
     }
 
     // Start the client in a new thread so main thread is free to capture input.

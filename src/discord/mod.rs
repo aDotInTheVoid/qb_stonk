@@ -15,9 +15,14 @@ const TRADES_ID: ChannelId = ChannelId(603769735867400193);
 
 pub(crate) struct Handler;
 pub(crate) struct BarrierManager;
+pub(crate) struct BuisnessManManager;
 
 impl TypeMapKey for BarrierManager {
     type Value = Arc<Barrier>;
+}
+
+impl TypeMapKey for BuisnessManManager {
+    type Value = Arc<Mutex<business::BuisnessMan>>;
 }
 
 impl EventHandler for Handler {
@@ -27,20 +32,28 @@ impl EventHandler for Handler {
     // Event handlers are dispatched through a threadpool, and so multiple
     // events can be dispatched simultaneously.
     fn message(&self, ctx: Context, msg: Message) {
-        if msg.author.bot {
+        if msg.author.bot || msg.channel_id != TRADES_ID {
             return;
         }
 
-        if msg.channel_id == TRADES_ID {
-            if msg.content.to_lowercase().starts_with("!buy ") {
-                let response = business::buy_responce(&msg);
-                if let Err(why) = msg.channel_id.say(&ctx.http, response) {
-                    println!("Error sending message: {:?}", why);
-                }
-            }
-        } else if msg.content.to_lowercase().starts_with("!sell ") {
-            let response = business::sell_responce(&msg);
+        let mc = msg.content.to_lowercase();
+
+        if mc.starts_with("!buy ") {
+            let mut data = ctx.data.write();
+            let mut bm = data.get_mut::<BuisnessManManager>().unwrap();
+            let response = bm.lock().buy_responce(&msg);
             if let Err(why) = msg.channel_id.say(&ctx.http, response) {
+                println!("Error sending message: {:?}", why);
+            }
+        } else if mc.starts_with("!sell ") {
+            let mut data = ctx.data.write();
+            let mut bm = data.get_mut::<BuisnessManManager>().unwrap();
+            let response = bm.lock().sell_responce(&msg);
+            if let Err(why) = msg.channel_id.say(&ctx.http, response) {
+                println!("Error sending message: {:?}", why);
+            }
+        } else if mc.starts_with("!buy") || mc.starts_with("!sell") {
+            if let Err(why) = msg.channel_id.say(&ctx.http, "Invalid request") {
                 println!("Error sending message: {:?}", why);
             }
         }
