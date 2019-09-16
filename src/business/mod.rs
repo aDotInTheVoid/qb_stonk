@@ -10,14 +10,9 @@ pub(crate) struct Portfolio {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub(crate) struct MarketSnapshot {
-    traders: HashMap<String, Portfolio>,
-    prices: HashMap<String, f64>,
-}
-
 pub(crate) struct BuisnessMan {
-    prices: HashMap<String, f64>,
-    traders: HashMap<User, Portfolio>,
+    pub prices: HashMap<String, f64>,
+    pub traders: HashMap<User, Portfolio>,
 }
 
 impl BuisnessMan {
@@ -28,9 +23,16 @@ impl BuisnessMan {
         }
     }
 
+    pub fn from_json(vals: &str) -> Option<Self> {
+        match serde_json::from_str(vals) {
+            Ok(v) => v,
+            Err(_) => None,
+        }
+    }
+
     /// Execute the buy, and generate a responce
     pub fn buy_responce(&mut self, msg: &Message) -> String {
-        let (num, name) = match (Self::parse_buy_sell(&msg.content)) {
+        let (num, name) = match Self::parse_buy_sell(&msg.content) {
             Err(v) => return v,
             Ok(v) => v,
         };
@@ -43,7 +45,7 @@ impl BuisnessMan {
 
     /// Execute the sell and send the responce
     pub fn sell_responce(&mut self, msg: &Message) -> String {
-        let (num, name) = match (Self::parse_buy_sell(&msg.content)) {
+        let (num, name) = match Self::parse_buy_sell(&msg.content) {
             Err(v) => return v,
             Ok(v) => v,
         };

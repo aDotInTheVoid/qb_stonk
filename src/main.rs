@@ -1,11 +1,8 @@
-use std::collections::HashMap;
 use std::env;
 use std::io::{stdin, stdout, Write};
 use std::sync::{Arc, Barrier};
 use std::thread;
 
-use reqwest;
-use serde::{Deserialize, Serialize};
 use serenity::prelude::*;
 
 mod business;
@@ -13,14 +10,15 @@ mod discord;
 mod groger;
 mod user;
 
-use business::BuisnessMan;
 use discord::{send_sd_msg, BarrierManager, BuisnessManManager, Handler};
 
 fn main() {
     let token =
         env::var("DISCORD_TOKEN").expect("Expected to find the environment variable DISCORD_TOKEN");
     let startbarier = Arc::new(Barrier::new(2));
-    let businessman = Arc::new(Mutex::new(BuisnessMan::new()));
+
+    let raw_bm = user::interactive_bm_generate();
+    let businessman = Arc::new(Mutex::new(raw_bm));
 
     // Create client
     let mut client = Client::new(&token, Handler).expect("Err creating client");
@@ -59,4 +57,5 @@ fn main() {
 
     // Send a message that the markets have shutdown.
     send_sd_msg();
+    println!("Sucessfuly shut down");
 }

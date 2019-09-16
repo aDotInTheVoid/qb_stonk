@@ -20,7 +20,6 @@ impl EventHandler for ShutdownHandler {
         if let Err(why) = TRADES_ID.say(&ctx.http, "The market is now closed") {
             println!("Error sending message: {:?}", why);
         }
-        println!("Sucseccfully sent shutdown message");
 
         // Get lock on data
         let data = ctx.data.read();
@@ -50,5 +49,4 @@ pub(crate) fn shutdown_msg() {
     if let Err(why) = client.start() {
         println!("Client error: {:?}", why);
     }
-    println!("Secoundary conection killed");
 }

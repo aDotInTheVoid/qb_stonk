@@ -10,7 +10,7 @@ fn e2none<T, E>(r: Result<T, E>) -> Option<T> {
     }
 }
 
-pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (i16, f32)>> {
+pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (u16, f32)>> {
     let mut ret = HashMap::with_capacity(INIT_CAP);
 
     let parser = Soup::new(post);
@@ -38,8 +38,8 @@ pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (i16, f32)
             continue;
         }
 
-        let name = elems[1].clone();
-        let rank: i16 = e2none(elems[0].parse()).unwrap();
+        let name = elems[1].clone().replace(" ", "-");
+        let rank: u16 = e2none(elems[0].parse()).unwrap();
         let weight: f32 = e2none(elems[2].parse()).unwrap();
         ret.insert(name, (rank, weight));
     }

@@ -39,16 +39,25 @@ impl EventHandler for Handler {
         let mc = msg.content.to_lowercase();
 
         if mc.starts_with("!buy ") {
-            let mut data = ctx.data.write();
-            let mut bm = data.get_mut::<BuisnessManManager>().unwrap();
-            let response = bm.lock().buy_responce(&msg);
+            let response = {
+                // Drop locks
+                let mut data = ctx.data.write();
+                let bm = data.get_mut::<BuisnessManManager>().unwrap();
+                let hack: String = bm.lock().buy_responce(&msg);
+                hack
+            };
+
             if let Err(why) = msg.channel_id.say(&ctx.http, response) {
                 println!("Error sending message: {:?}", why);
             }
         } else if mc.starts_with("!sell ") {
-            let mut data = ctx.data.write();
-            let mut bm = data.get_mut::<BuisnessManManager>().unwrap();
-            let response = bm.lock().sell_responce(&msg);
+            let response = {
+                let mut data = ctx.data.write();
+                let bm = data.get_mut::<BuisnessManManager>().unwrap();
+                let hack: String = bm.lock().sell_responce(&msg);
+                hack
+            };
+
             if let Err(why) = msg.channel_id.say(&ctx.http, response) {
                 println!("Error sending message: {:?}", why);
             }
