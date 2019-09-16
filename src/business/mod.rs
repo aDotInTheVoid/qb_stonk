@@ -1,7 +1,13 @@
 use std::collections::HashMap;
+use std::error::Error;
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use serenity::model::{channel::Message, user::User};
+
+use crate::user::DATA_FILE_NAME;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct Portfolio {
@@ -37,10 +43,18 @@ impl BuisnessMan {
             Ok(v) => v,
         };
 
-        format!(
-            "It looks like you want to buy {} stonk(s) of {}. Unfortunalty this isnt suported",
-            num, name
-        )
+        if let Some(price) = self.prices.get(name) {
+            format!(
+                "It looks like you want to buy {} stonk(s) of {}. \n They cost {} each for a total of {}\nUnfortunalty this isnt suported",
+                num, name, price, (*price)*(num as f64)
+            )
+        } else {
+            dbg!(&self.prices);
+            format!(
+                "It looks like you want to buy {}. However this isn't availibel",
+                name
+            )
+        }
     }
 
     /// Execute the sell and send the responce
@@ -59,7 +73,7 @@ impl BuisnessMan {
     /// Parse a message for a name and a price.
     /// The name may not contain spaces.
     fn parse_buy_sell(mess: &String) -> Result<(u16, &str), String> {
-        let mut parts = mess.split(" ");
+        let mut parts = mess.make_ascii_lowercase().split(" ");
         // Skip over !buy / !sell
         parts.next().unwrap();
 
@@ -82,5 +96,26 @@ impl BuisnessMan {
         }
 
         Ok((num, name))
+    }
+}
+
+impl Drop for BuisnessMan {
+    fn drop(&mut self) {
+        let json_self = serde_json::to_vec_pretty(&self)
+            .expect("failed to sereialise state \n all trades may be lost");
+
+        let path = Path::new(DATA_FILE_NAME);
+        let display = path.display();
+
+        let mut file = match File::create(&path) {
+            Err(why) => panic!("couldn't create {}: {}", display, why.description()),
+            Ok(file) => file,
+        };
+
+        // Write the `LOREM_IPSUM` string to `file`, returns `io::Result<()>`
+        match file.write_all(&json_self) {
+            Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
+            Ok(_) => println!("successfully wrote to {}", display),
+        }
     }
 }

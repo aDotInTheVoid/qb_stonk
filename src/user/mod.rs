@@ -8,7 +8,7 @@ use reqwest;
 use crate::business::BuisnessMan;
 use crate::groger::parse_groger_post;
 
-const DATA_FILE_NAME: &str = "mdat.json";
+pub const DATA_FILE_NAME: &str = "mdat.json";
 
 pub(crate) fn interactive_bm_generate() -> BuisnessMan {
     // match  get_dat_file() {
@@ -53,12 +53,11 @@ fn bm_from_no_file() -> BuisnessMan {
                 .prices
                 .insert(name.to_string(), calc_price(*rank, *weight));
         }
+        ret_bm
     } else {
         print!("Failed to parse groger post");
         return bm_from_no_file();
     }
-
-    BuisnessMan::new()
 }
 
 fn calc_price(rank: u16, weight: f32) -> f64 {

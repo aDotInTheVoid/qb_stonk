@@ -1,3 +1,10 @@
+// THIS IS GLITCHED AS HELL
+// https://grogerranks.com/2019/06/11/2019-post-nationals-overall-rankings/ works
+// https://grogerranks.com/2019/06/11/2019-post-nationals-nationals-only-rankings/ doesnt
+// https://grogerranks.com/2019/06/11/2019-post-nationals-hard-sets-only-rankings/ doesnt
+// https://grogerranks.com/2019/06/11/2019-post-nationals-macf-only-rankings/ doesnt
+// https://grogerranks.com/2019/06/11/2019-post-nationals-naqt-only-rankings/ doesntgit
+
 use soup::prelude::*;
 use std::collections::HashMap;
 
@@ -34,11 +41,11 @@ pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (u16, f32)
             .map(|a| a.text())
             .collect::<Vec<_>>();
 
-        if elems[0] == "OVERALL RANK" {
+        if elems[1] == "TEAM" {
             continue;
         }
 
-        let name = elems[1].clone().replace(" ", "-");
+        let name = elems[1].to_lowercase().replace(" ", "-");
         let rank: u16 = e2none(elems[0].parse()).unwrap();
         let weight: f32 = e2none(elems[2].parse()).unwrap();
         ret.insert(name, (rank, weight));
