@@ -46,14 +46,6 @@ impl BuisnessMan {
         }
     }
 
-    // Parse a json, and Posibly get self
-    pub fn from_json(vals: &str) -> Option<Self> {
-        match serde_json::from_str(vals) {
-            Ok(v) => v,
-            Err(_) => None,
-        }
-    }
-
     /// Execute the buy, and generate a responce
     pub fn buy_responce(&mut self, msg: &Message) -> String {
         // Parse The message
@@ -101,22 +93,68 @@ impl BuisnessMan {
 
     /// Execute the sell and send the responce
     pub fn sell_responce(&mut self, msg: &Message) -> String {
+        // Parse The message
         let (num, name) = match Self::parse_buy_sell(&msg.content) {
             Err(v) => return v,
             Ok(v) => v,
         };
 
-        format!(
-            "It looks like you want to sell {} stonk(s) of {}. Unfortunalty this isnt suported",
-            num, name
-        )
+        // Try to get the price of the team the user requested.
+        if let Some(price) = self.prices.get(&name.to_lowercase()) {
+            // Calculate total prices of transaction
+            let total_prices = (*price) * (num as f64);
+
+            // Get the user, inserting a new trader if this is their first time
+            let user_entry = self
+                .traders
+                .entry(msg.author.id)
+                .or_insert(Portfolio::new());
+
+            // Check if the user has enough shares
+            if let Some(user_num_shares) = user_entry.shares.get(&name.to_lowercase()) {
+                if *user_num_shares >= num as u64 {
+                    // Remove the donnars
+                    user_entry.dollars += total_prices;
+                    // Add the shares
+                    let num_shars: &mut u64 =
+                        user_entry.shares.entry(name.to_lowercase()).or_insert(0);
+                    *num_shars -= num as u64;
+
+                    // Return the message
+                    format!(
+                    "<@{}>, You have sold {} stonks of {}, for a total of {:.2}. You now have {} of these stonks and {:.2} dollars",
+                    msg.author.id, num, name, total_prices, num_shars, user_entry.dollars
+                    )
+                // User Doent have enough
+                } else {
+                    format!(
+                        "<@{}>, you want to sell {} shares of {}, but you only own {}",
+                        msg.author.id, num, name, user_num_shares
+                    )
+                }
+            // Not in hashmap of user property
+            } else {
+                format!(
+                    "<@{}>, you want to sell shares of {}, but you own none",
+                    msg.author.id, name
+                )
+            }
+        // Not in hashmap of share prices
+        } else {
+            format!(
+                "It looks like you want to buy {}. However we don't know what this is. Check your spelling.",
+                name
+            )
+        }
     }
 
     pub fn me_responce(&self, msg: &Message) -> String {
         if let Some(user_entry) = self.traders.get(&msg.author.id) {
             format!(
                 "<@{}>, you have {:.2} dollars and these shares:\n{}",
-                msg.author.id, user_entry.dollars, display_shares(&user_entry.shares)
+                msg.author.id,
+                user_entry.dollars,
+                display_shares(&user_entry.shares)
             )
         } else {
             format!(
@@ -191,7 +229,9 @@ impl Drop for BuisnessMan {
 fn display_shares(vals: &HashMap<String, u64>) -> String {
     let mut lines: Vec<String> = Vec::with_capacity(vals.len());
     for (i, j) in vals {
-        lines.push(format!("{} of {}", i, j))
+        if *j != 0 {
+            lines.push(format!("{} of {}", j, i));
+        }
     }
     lines.join("\n")
 }
