@@ -16,10 +16,27 @@ pub(crate) fn interactive_bm_generate() -> BuisnessMan {
     //     Err(_) => bm_from_no_file(),
     // }
 
-    let x = get_dat_file();
+    let dat_file = get_dat_file();
 
-    if x.is_ok() {
-        return bm_from_json_string(&x.unwrap());
+    if dat_file.is_ok() {
+        let mut yn_to_file = String::new();
+        print!("Use existing prices [(Y)/n]: ");
+        stdout().flush().unwrap();
+        stdin().read_line(&mut yn_to_file).unwrap();
+        if yn_to_file.to_lowercase().starts_with("n") {
+            let mut new_prices_bm = bm_from_no_file();
+            let mut old_ownership_bm = bm_from_json_string(&dat_file.unwrap());
+            new_prices_bm.write = false;
+            old_ownership_bm.write = false;
+
+            return BuisnessMan {
+                prices: new_prices_bm.prices.clone(),
+                traders: old_ownership_bm.traders.clone(),
+                write: true,
+            };
+        } else {
+            return bm_from_json_string(&dat_file.unwrap());
+        }
     } else {
         println!("Failed to open database file");
 
@@ -66,6 +83,6 @@ fn bm_from_no_file() -> BuisnessMan {
     }
 }
 
-fn calc_price(rank: u16, weight: f32) -> f64 {
+fn calc_price(_rank: u16, weight: f32) -> f64 {
     weight as f64
 }

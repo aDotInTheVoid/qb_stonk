@@ -5,7 +5,7 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-use serenity::model::{channel::Message, id::UserId, user::User};
+use serenity::model::{channel::Message, id::UserId};
 
 use crate::user::DATA_FILE_NAME;
 
@@ -35,6 +35,7 @@ pub(crate) struct BuisnessMan {
     pub prices: HashMap<String, f64>,
     // Maps a UserID to a protfilis
     pub traders: HashMap<UserId, Portfolio>,
+    pub write: bool,
 }
 
 impl BuisnessMan {
@@ -43,6 +44,7 @@ impl BuisnessMan {
         BuisnessMan {
             prices: HashMap::new(),
             traders: HashMap::new(),
+            write: true,
         }
     }
 
