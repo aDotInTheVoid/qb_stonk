@@ -19,7 +19,7 @@ pub(crate) struct Portfolio {
 
 impl Portfolio {
     pub fn new() -> Self {
-        Portfolio{
+        Portfolio {
             shares: HashMap::new(),
             dollars: USER_DOLLARS_START,
         }
@@ -56,7 +56,10 @@ impl BuisnessMan {
 
         if let Some(price) = self.prices.get(&name.to_lowercase()) {
             let total_prices = (*price) * (num as f64);
-            let user_entry = self.traders.entry(msg.author.id).or_insert(Portfolio::new());
+            let user_entry = self
+                .traders
+                .entry(msg.author.id)
+                .or_insert(Portfolio::new());
             if user_entry.dollars < total_prices {
                 return format!(
                     "This trade would cost {}, but you only have {}",
