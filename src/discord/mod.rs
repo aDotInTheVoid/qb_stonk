@@ -32,12 +32,14 @@ impl EventHandler for Handler {
     // Event handlers are dispatched through a threadpool, and so multiple
     // events can be dispatched simultaneously.
     fn message(&self, ctx: Context, msg: Message) {
+        // Return if were not in trades chanel.
         if msg.author.bot || msg.channel_id != TRADES_ID {
             return;
         }
 
         let mc = msg.content.to_lowercase();
 
+        // Buy responce
         if mc.starts_with("!buy ") {
             let response = {
                 // Drop locks
@@ -50,6 +52,7 @@ impl EventHandler for Handler {
             if let Err(why) = msg.channel_id.say(&ctx.http, response) {
                 println!("Error sending message: {:?}", why);
             }
+        // Sell reponce
         } else if mc.starts_with("!sell ") {
             let response = {
                 let mut data = ctx.data.write();
@@ -61,6 +64,19 @@ impl EventHandler for Handler {
             if let Err(why) = msg.channel_id.say(&ctx.http, response) {
                 println!("Error sending message: {:?}", why);
             }
+        // Info responce
+        } else if mc.starts_with("!me") {
+            let response = {
+                let data = ctx.data.read();
+                let bm = data.get::<BuisnessManManager>().unwrap();
+                let hack: String = bm.lock().me_responce(&msg);
+                hack
+            };
+
+            if let Err(why) = msg.channel_id.say(&ctx.http, response) {
+                println!("Error sending message: {:?}", why);
+            }
+        // Override
         } else if mc.starts_with("!buy") || mc.starts_with("!sell") {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Invalid request") {
                 println!("Error sending message: {:?}", why);
@@ -69,7 +85,7 @@ impl EventHandler for Handler {
     }
 
     fn ready(&self, ctx: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        println!("Conected to discord");
 
         // Send message to server anounsing our arrival.
         if let Err(why) = TRADES_ID.say(

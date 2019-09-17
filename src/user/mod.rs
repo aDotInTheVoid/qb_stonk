@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::stdin;
+use std::io::{stdin,stdout};
 
 use std::io::prelude::*;
 
@@ -35,14 +35,20 @@ fn get_dat_file() -> std::io::Result<String> {
     Ok(ret)
 }
 
-fn bm_from_json_string(_: &str) -> BuisnessMan {
-    println!("I have a file, but im gonna ignore it");
-    bm_from_no_file()
+fn bm_from_json_string(json: &str) -> BuisnessMan {
+    if let Ok(bm) = serde_json::from_str::<BuisnessMan>(json) {
+        println!("Sucessfuly read file");
+        bm
+    } else {
+        println!("Failed to read file");
+        bm_from_no_file()
+    }
 }
 
 fn bm_from_no_file() -> BuisnessMan {
     let mut groger_url = String::new();
-    println!("Enter a groger url to get prices from: ");
+    print!("Enter a groger url to get prices from: ");
+    stdout().flush().unwrap();
     stdin().read_line(&mut groger_url).unwrap();
     let grog_txt = reqwest::get(&groger_url).unwrap().text().unwrap();
     let _grog_vals = parse_groger_post(&grog_txt);

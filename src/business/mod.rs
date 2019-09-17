@@ -37,8 +37,8 @@ pub(crate) struct BuisnessMan {
     pub traders: HashMap<UserId, Portfolio>,
 }
 
-// New is empty
 impl BuisnessMan {
+    // New is empty
     pub fn new() -> Self {
         BuisnessMan {
             prices: HashMap::new(),
@@ -112,6 +112,20 @@ impl BuisnessMan {
         )
     }
 
+    pub fn me_responce(&self, msg: &Message) -> String {
+        if let Some(user_entry) = self.traders.get(&msg.author.id) {
+            format!(
+                "<@{}>, you have {:.2} dollars and these shares:\n{}",
+                msg.author.id, user_entry.dollars, display_shares(&user_entry.shares)
+            )
+        } else {
+            format!(
+                "<@{}>, You come from nothing. You're nothing. But not to me. \n (You have no stonks, but you do have your staring money of {} dollars)",
+                msg.author.id, USER_DOLLARS_START
+            )
+        }
+    }
+
     /// Parse a message for a name and a price.
     /// The name may not contain spaces.
     fn parse_buy_sell(mess: &String) -> Result<(u16, String), String> {
@@ -172,4 +186,12 @@ impl Drop for BuisnessMan {
             Ok(_) => println!("successfully wrote to {}", display),
         }
     }
+}
+
+fn display_shares(vals: &HashMap<String, u64>) -> String {
+    let mut lines: Vec<String> = Vec::with_capacity(vals.len());
+    for (i, j) in vals {
+        lines.push(format!("{} of {}", i, j))
+    }
+    lines.join("\n")
 }
