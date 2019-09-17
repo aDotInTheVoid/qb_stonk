@@ -11,7 +11,7 @@ mod shutdown_sender;
 pub(crate) use self::shutdown_sender::shutdown_msg as send_sd_msg;
 
 // TODO: load dynamicly
-const TRADES_ID: ChannelId = ChannelId(603769735867400193);
+const TRADES_ID: ChannelId = ChannelId(603_769_735_867_400_193);
 
 pub(crate) struct Handler;
 pub(crate) struct BarrierManager;
@@ -84,7 +84,7 @@ impl EventHandler for Handler {
         }
     }
 
-    fn ready(&self, ctx: Context, ready: Ready) {
+    fn ready(&self, ctx: Context, _ready: Ready) {
         println!("Conected to discord");
 
         // Send message to server anounsing our arrival.

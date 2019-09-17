@@ -16,31 +16,31 @@ pub(crate) fn interactive_bm_generate() -> BuisnessMan {
     //     Err(_) => bm_from_no_file(),
     // }
 
-    let dat_file = get_dat_file();
+    let dat_file_res = get_dat_file();
 
-    if dat_file.is_ok() {
+    if let Ok(dat_file) = dat_file_res {
         let mut yn_to_file = String::new();
         print!("Use existing prices [(Y)/n]: ");
         stdout().flush().unwrap();
         stdin().read_line(&mut yn_to_file).unwrap();
-        if yn_to_file.to_lowercase().starts_with("n") {
+        if yn_to_file.to_lowercase().starts_with('n') {
             let mut new_prices_bm = bm_from_no_file();
-            let mut old_ownership_bm = bm_from_json_string(&dat_file.unwrap());
+            let mut old_ownership_bm = bm_from_json_string(&dat_file);
             new_prices_bm.write = false;
             old_ownership_bm.write = false;
 
-            return BuisnessMan {
+            BuisnessMan {
                 prices: new_prices_bm.prices.clone(),
                 traders: old_ownership_bm.traders.clone(),
                 write: true,
-            };
+            }
         } else {
-            return bm_from_json_string(&dat_file.unwrap());
+            bm_from_json_string(&dat_file)
         }
     } else {
         println!("Failed to open database file");
 
-        return bm_from_no_file();
+        bm_from_no_file()
     }
 }
 
@@ -79,10 +79,10 @@ fn bm_from_no_file() -> BuisnessMan {
         ret_bm
     } else {
         print!("Failed to parse groger post");
-        return bm_from_no_file();
+        bm_from_no_file()
     }
 }
 
 fn calc_price(_rank: u16, weight: f32) -> f64 {
-    weight as f64
+    f64::from(weight)
 }

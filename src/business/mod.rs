@@ -59,12 +59,12 @@ impl BuisnessMan {
         // Try to get the price of the team the user requested.
         if let Some(price) = self.prices.get(&name.to_lowercase()) {
             // Calculate total prices of transaction
-            let total_prices = (*price) * (num as f64);
+            let total_prices = (*price) * (f64::from(num));
             // Get the user, inserting a new trader if this is their first time
             let user_entry = self
                 .traders
                 .entry(msg.author.id)
-                .or_insert(Portfolio::new());
+                .or_insert_with(Portfolio::new);
             // Check if the user has enough money
             if user_entry.dollars < total_prices {
                 return format!(
@@ -77,7 +77,7 @@ impl BuisnessMan {
             user_entry.dollars -= total_prices;
             // Add the shares
             let num_shars: &mut u64 = user_entry.shares.entry(name.to_lowercase()).or_insert(0);
-            *num_shars += num as u64;
+            *num_shars += u64::from(num);
 
             // Return the message
             format!(
@@ -104,23 +104,23 @@ impl BuisnessMan {
         // Try to get the price of the team the user requested.
         if let Some(price) = self.prices.get(&name.to_lowercase()) {
             // Calculate total prices of transaction
-            let total_prices = (*price) * (num as f64);
+            let total_prices = (*price) * (f64::from(num));
 
             // Get the user, inserting a new trader if this is their first time
             let user_entry = self
                 .traders
                 .entry(msg.author.id)
-                .or_insert(Portfolio::new());
+                .or_insert_with(Portfolio::new);
 
             // Check if the user has enough shares
             if let Some(user_num_shares) = user_entry.shares.get(&name.to_lowercase()) {
-                if *user_num_shares >= num as u64 {
+                if *user_num_shares >= u64::from(num) {
                     // Remove the donnars
                     user_entry.dollars += total_prices;
                     // Add the shares
                     let num_shars: &mut u64 =
                         user_entry.shares.entry(name.to_lowercase()).or_insert(0);
-                    *num_shars -= num as u64;
+                    *num_shars -= u64::from(num);
 
                     // Return the message
                     format!(
@@ -168,10 +168,10 @@ impl BuisnessMan {
 
     /// Parse a message for a name and a price.
     /// The name may not contain spaces.
-    fn parse_buy_sell(mess: &String) -> Result<(u16, String), String> {
+    fn parse_buy_sell(mess: &str) -> Result<(u16, String), String> {
         // Normalise message
         let mess_lc = mess.to_lowercase();
-        let mut parts = mess_lc.split(" ");
+        let mut parts = mess_lc.split(' ');
 
         // Skip over !buy / !sell
         parts.next().unwrap();
@@ -194,9 +194,8 @@ impl BuisnessMan {
         };
 
         // Check their's nothing left
-        match parts.next() {
-            Some(v) => return Err(format!("Unexpected text: \"{}\"", v)),
-            None => {}
+        if let Some(v) = parts.next() {
+            return Err(format!("Unexpected text: \"{}\"", v));
         }
 
         Ok((num, name.to_owned()))
