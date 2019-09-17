@@ -205,24 +205,26 @@ impl BuisnessMan {
 impl Drop for BuisnessMan {
     // When the BuisnessMan drops, save the state
     fn drop(&mut self) {
-        // Convert self to vec of json
-        let json_self = serde_json::to_vec_pretty(&self)
-            .expect("failed to sereialise state \n all trades may be lost");
+        if self.write {
+            // Convert self to vec of json
+            let json_self = serde_json::to_vec_pretty(&self)
+                .expect("failed to sereialise state \n all trades may be lost");
 
-        // Get paths
-        let path = Path::new(DATA_FILE_NAME);
-        let display = path.display();
+            // Get paths
+            let path = Path::new(DATA_FILE_NAME);
+            let display = path.display();
 
-        // Get file
-        let mut file = match File::create(&path) {
-            Err(why) => panic!("couldn't create {}: {}", display, why.description()),
-            Ok(file) => file,
-        };
+            // Get file
+            let mut file = match File::create(&path) {
+                Err(why) => panic!("couldn't create {}: {}", display, why.description()),
+                Ok(file) => file,
+            };
 
-        // Write the data to the file
-        match file.write_all(&json_self) {
-            Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
-            Ok(_) => println!("successfully wrote to {}", display),
+            // Write the data to the file
+            match file.write_all(&json_self) {
+                Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
+                Ok(_) => println!("successfully wrote to {}", display),
+            }
         }
     }
 }
