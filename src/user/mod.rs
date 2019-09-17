@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{stdin,stdout};
+use std::io::{stdin, stdout};
 
 use std::io::prelude::*;
 
