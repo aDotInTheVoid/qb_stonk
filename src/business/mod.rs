@@ -5,9 +5,11 @@ use std::io::prelude::*;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-use serenity::model::{channel::Message, user::User};
+use serenity::model::{channel::Message, id::UserId, user::User};
 
 use crate::user::DATA_FILE_NAME;
+
+const USER_DOLLARS_START: f64 = 1000.0;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct Portfolio {
@@ -15,10 +17,19 @@ pub(crate) struct Portfolio {
     dollars: f64,
 }
 
+impl Portfolio {
+    pub fn new() -> Self {
+        Portfolio{
+            shares: HashMap::new(),
+            dollars: USER_DOLLARS_START,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct BuisnessMan {
-    pub prices: HashMap<String, f64>,
-    pub traders: HashMap<User, Portfolio>,
+    pub prices: HashMap<String, f64>, // A stock is a string, a price is a f64
+    pub traders: HashMap<UserId, Portfolio>,
 }
 
 impl BuisnessMan {
@@ -43,15 +54,28 @@ impl BuisnessMan {
             Ok(v) => v,
         };
 
-        if let Some(price) = self.prices.get(name) {
+        if let Some(price) = self.prices.get(&name.to_lowercase()) {
+            let total_prices = (*price) * (num as f64);
+            let user_entry = self.traders.entry(msg.author.id).or_insert(Portfolio::new());
+            if user_entry.dollars < total_prices {
+                return format!(
+                    "This trade would cost {}, but you only have {}",
+                    total_prices, user_entry.dollars
+                );
+            }
+
+            user_entry.dollars -= total_prices;
+            let num_shars: &mut u64 = user_entry.shares.entry(name.to_lowercase()).or_insert(0);
+            *num_shars += num as u64;
+
             format!(
-                "It looks like you want to buy {} stonk(s) of {}. \n They cost {} each for a total of {}\nUnfortunalty this isnt suported",
-                num, name, price, (*price)*(num as f64)
+                "@{}#{}, You have baught {} stonks of {}, for a total of {}. You now have {} of these stonks and {} dollars",
+                msg.author.name,msg.author.discriminator, num, name, total_prices, num_shars, user_entry.dollars
             )
         } else {
             dbg!(&self.prices);
             format!(
-                "It looks like you want to buy {}. However this isn't availibel",
+                "It looks like you want to buy {}. However we don't know what this is. Check your spelling.",
                 name
             )
         }
@@ -72,8 +96,9 @@ impl BuisnessMan {
 
     /// Parse a message for a name and a price.
     /// The name may not contain spaces.
-    fn parse_buy_sell(mess: &String) -> Result<(u16, &str), String> {
-        let mut parts = mess.make_ascii_lowercase().split(" ");
+    fn parse_buy_sell(mess: &String) -> Result<(u16, String), String> {
+        let mess_lc = mess.to_lowercase();
+        let mut parts = mess_lc.split(" ");
         // Skip over !buy / !sell
         parts.next().unwrap();
 
@@ -95,7 +120,7 @@ impl BuisnessMan {
             None => {}
         }
 
-        Ok((num, name))
+        Ok((num, name.to_owned()))
     }
 }
 
