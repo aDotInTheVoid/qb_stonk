@@ -57,7 +57,7 @@ impl BuisnessMan {
         };
 
         // Try to get the price of the team the user requested.
-        if let Some(price) = self.prices.get(&name.to_lowercase()) {
+        if let Some(price) = self.prices.get(&name) {
             // Calculate total prices of transaction
             let total_prices = (*price) * (f64::from(num));
             // Get the user, inserting a new trader if this is their first time
@@ -76,7 +76,7 @@ impl BuisnessMan {
             // Remove the donnars
             user_entry.dollars -= total_prices;
             // Add the shares
-            let num_shars: &mut u64 = user_entry.shares.entry(name.to_lowercase()).or_insert(0);
+            let num_shars: &mut u64 = user_entry.shares.entry(name.clone()).or_insert(0);
             *num_shars += u64::from(num);
 
             // Return the message
@@ -102,7 +102,7 @@ impl BuisnessMan {
         };
 
         // Try to get the price of the team the user requested.
-        if let Some(price) = self.prices.get(&name.to_lowercase()) {
+        if let Some(price) = self.prices.get(&name) {
             // Calculate total prices of transaction
             let total_prices = (*price) * (f64::from(num));
 
@@ -113,13 +113,13 @@ impl BuisnessMan {
                 .or_insert_with(Portfolio::new);
 
             // Check if the user has enough shares
-            if let Some(user_num_shares) = user_entry.shares.get(&name.to_lowercase()) {
+            if let Some(user_num_shares) = user_entry.shares.get(&name) {
                 if *user_num_shares >= u64::from(num) {
                     // Remove the donnars
                     user_entry.dollars += total_prices;
                     // Add the shares
                     let num_shars: &mut u64 =
-                        user_entry.shares.entry(name.to_lowercase()).or_insert(0);
+                        user_entry.shares.entry(name.clone()).or_insert(0);
                     *num_shars -= u64::from(num);
 
                     // Return the message
@@ -197,8 +197,7 @@ impl BuisnessMan {
         if let Some(v) = parts.next() {
             return Err(format!("Unexpected text: \"{}\"", v));
         }
-
-        Ok((num, name.to_owned()))
+Ok((num, name.to_string()))
     }
 }
 
