@@ -1,7 +1,8 @@
-use std::env;
-use std::sync::Arc;
+use std::{env, sync::Arc};
 
-use serenity::{client::bridge::gateway::ShardManager, model::gateway::Ready, prelude::*};
+use serenity::{
+    client::bridge::gateway::ShardManager, model::gateway::Ready, prelude::*,
+};
 
 use super::TRADES_ID;
 
@@ -35,11 +36,14 @@ impl EventHandler for ShutdownHandler {
 }
 
 pub(crate) fn shutdown_msg() {
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token =
+        env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
-    let mut client = Client::new(&token, ShutdownHandler).expect("Err creating client");
+    let mut client =
+        Client::new(&token, ShutdownHandler).expect("Err creating client");
     {
-        // do this in a auxilary thread to drop Lock on data
+        // do this in a auxilary thread to drop Lock
+        // on data
         let mut data = client.data.write();
         // Add the shardmanager to the client data
         data.insert::<ShardManagerContainer>(Arc::clone(&client.shard_manager));

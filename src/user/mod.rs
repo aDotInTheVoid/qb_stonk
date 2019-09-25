@@ -1,12 +1,13 @@
-use std::fs::File;
-use std::io::{stdin, stdout};
+use std::{
+    fs::File,
+    io::{stdin, stdout},
+};
 
 use std::io::prelude::*;
 
 use reqwest;
 
-use crate::business::BuisnessMan;
-use crate::groger::parse_groger_post;
+use crate::{business::BuisnessMan, groger::parse_groger_post};
 
 pub const DATA_FILE_NAME: &str = "mdat.json";
 
@@ -30,9 +31,9 @@ pub(crate) fn interactive_bm_generate() -> BuisnessMan {
             old_ownership_bm.write = false;
 
             BuisnessMan {
-                prices: new_prices_bm.prices.clone(),
+                prices:  new_prices_bm.prices.clone(),
                 traders: old_ownership_bm.traders.clone(),
-                write: true,
+                write:   true,
             }
         } else {
             bm_from_json_string(&dat_file)

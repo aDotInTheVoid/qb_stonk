@@ -17,7 +17,9 @@ fn e2none<T, E>(r: Result<T, E>) -> Option<T> {
     }
 }
 
-pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (u16, f32)>> {
+pub(super) fn parse_groger_post(
+    post: &str,
+) -> Option<HashMap<String, (u16, f32)>> {
     let mut ret = HashMap::with_capacity(INIT_CAP);
 
     let parser = Soup::new(post);

@@ -26,11 +26,14 @@ impl TypeMapKey for BuisnessManManager {
 }
 
 impl EventHandler for Handler {
-    // Set a handler for the `message` event - so that whenever a new message
-    // is received - the closure (or function) passed will be called.
+    // Set a handler for the `message` event - so
+    // that whenever a new message is received -
+    // the closure (or function) passed will be
+    // called.
     //
-    // Event handlers are dispatched through a threadpool, and so multiple
-    // events can be dispatched simultaneously.
+    // Event handlers are dispatched through a
+    // threadpool, and so multiple events can be
+    // dispatched simultaneously.
     fn message(&self, ctx: Context, msg: Message) {
         // Return if were not in trades chanel.
         if msg.author.bot || msg.channel_id != TRADES_ID {
@@ -87,7 +90,8 @@ impl EventHandler for Handler {
     fn ready(&self, ctx: Context, _ready: Ready) {
         println!("Conected to discord");
 
-        // Send message to server anounsing our arrival.
+        // Send message to server anounsing our
+        // arrival.
         if let Err(why) = TRADES_ID.say(
             &ctx.http,
             "@e_veryone THE MARKET IS OPEN, GET YOUR STONKS (not realy)",

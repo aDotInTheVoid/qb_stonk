@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-use std::error::Error;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
+use std::{
+    collections::HashMap, error::Error, fs::File, io::prelude::*, path::Path,
+};
 
 use serde::{Deserialize, Serialize};
 use serenity::model::{channel::Message, id::UserId};
@@ -14,15 +12,16 @@ const USER_DOLLARS_START: f64 = 1000.0;
 // The property of 1 trader
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct Portfolio {
-    shares: HashMap<String, u64>,
+    shares:  HashMap<String, u64>,
     dollars: f64,
 }
 
-// A new trader has no stonks and USER_DOLLARS_START stonks
+// A new trader has no stonks and USER_DOLLARS_START
+// stonks
 impl Portfolio {
     pub fn new() -> Self {
         Portfolio {
-            shares: HashMap::new(),
+            shares:  HashMap::new(),
             dollars: USER_DOLLARS_START,
         }
     }
@@ -31,20 +30,21 @@ impl Portfolio {
 // The state of the marker
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct BuisnessMan {
-    // Maps a team name (as lowercase "-" speerated string) to price
+    // Maps a team name (as lowercase "-" speerated
+    // string) to price
     pub prices: HashMap<String, f64>,
     // Maps a UserID to a protfilis
     pub traders: HashMap<UserId, Portfolio>,
-    pub write: bool,
+    pub write:   bool,
 }
 
 impl BuisnessMan {
     // New is empty
     pub fn new() -> Self {
         BuisnessMan {
-            prices: HashMap::new(),
+            prices:  HashMap::new(),
             traders: HashMap::new(),
-            write: true,
+            write:   true,
         }
     }
 
@@ -56,11 +56,13 @@ impl BuisnessMan {
             Ok(v) => v,
         };
 
-        // Try to get the price of the team the user requested.
+        // Try to get the price of the team the user
+        // requested.
         if let Some(price) = self.prices.get(&name) {
             // Calculate total prices of transaction
             let total_prices = (*price) * (f64::from(num));
-            // Get the user, inserting a new trader if this is their first time
+            // Get the user, inserting a new trader
+            // if this is their first time
             let user_entry = self
                 .traders
                 .entry(msg.author.id)
@@ -76,18 +78,26 @@ impl BuisnessMan {
             // Remove the donnars
             user_entry.dollars -= total_prices;
             // Add the shares
-            let num_shars: &mut u64 = user_entry.shares.entry(name.clone()).or_insert(0);
+            let num_shars: &mut u64 =
+                user_entry.shares.entry(name.clone()).or_insert(0);
             *num_shars += u64::from(num);
 
             // Return the message
             format!(
-                "<@{}>, You have baught {} stonks of {}, for a total of {:.2}. You now have {} of these stonks and {:.2} dollars",
-                msg.author.id, num, name, total_prices, num_shars, user_entry.dollars
+                "<@{}>, You have baught {} stonks of {}, for a total of \
+                 {:.2}. You now have {} of these stonks and {:.2} dollars",
+                msg.author.id,
+                num,
+                name,
+                total_prices,
+                num_shars,
+                user_entry.dollars
             )
         } else {
             // We don't have the stock
             format!(
-                "It looks like you want to buy {}. However we don't know what this is. Check your spelling.",
+                "It looks like you want to buy {}. However we don't know what \
+                 this is. Check your spelling.",
                 name
             )
         }
@@ -101,12 +111,14 @@ impl BuisnessMan {
             Ok(v) => v,
         };
 
-        // Try to get the price of the team the user requested.
+        // Try to get the price of the team the user
+        // requested.
         if let Some(price) = self.prices.get(&name) {
             // Calculate total prices of transaction
             let total_prices = (*price) * (f64::from(num));
 
-            // Get the user, inserting a new trader if this is their first time
+            // Get the user, inserting a new trader
+            // if this is their first time
             let user_entry = self
                 .traders
                 .entry(msg.author.id)
@@ -118,18 +130,27 @@ impl BuisnessMan {
                     // Remove the donnars
                     user_entry.dollars += total_prices;
                     // Add the shares
-                    let num_shars: &mut u64 = user_entry.shares.entry(name.clone()).or_insert(0);
+                    let num_shars: &mut u64 =
+                        user_entry.shares.entry(name.clone()).or_insert(0);
                     *num_shars -= u64::from(num);
 
                     // Return the message
                     format!(
-                    "<@{}>, You have sold {} stonks of {}, for a total of {:.2}. You now have {} of these stonks and {:.2} dollars",
-                    msg.author.id, num, name, total_prices, num_shars, user_entry.dollars
+                        "<@{}>, You have sold {} stonks of {}, for a total of \
+                         {:.2}. You now have {} of these stonks and {:.2} \
+                         dollars",
+                        msg.author.id,
+                        num,
+                        name,
+                        total_prices,
+                        num_shars,
+                        user_entry.dollars
                     )
                 // User Doent have enough
                 } else {
                     format!(
-                        "<@{}>, you want to sell {} shares of {}, but you only own {}",
+                        "<@{}>, you want to sell {} shares of {}, but you \
+                         only own {}",
                         msg.author.id, num, name, user_num_shares
                     )
                 }
@@ -143,7 +164,8 @@ impl BuisnessMan {
         // Not in hashmap of share prices
         } else {
             format!(
-                "It looks like you want to buy {}. However we don't know what this is. Check your spelling.",
+                "It looks like you want to buy {}. However we don't know what \
+                 this is. Check your spelling.",
                 name
             )
         }
@@ -159,7 +181,9 @@ impl BuisnessMan {
             )
         } else {
             format!(
-                "<@{}>, You come from nothing. You're nothing. But not to me. \n (You have no stonks, but you do have your staring money of {} dollars)",
+                "<@{}>, You come from nothing. You're nothing. But not to me. \
+                 \n (You have no stonks, but you do have your staring money \
+                 of {} dollars)",
                 msg.author.id, USER_DOLLARS_START
             )
         }
@@ -178,17 +202,23 @@ impl BuisnessMan {
         // Get a number
         let num: u16 = match parts.next() {
             // No more text
-            None => return Err("Incomplete request: Expected a quantity".to_owned()),
+            None => {
+                return Err(
+                    "Incomplete request: Expected a quantity".to_owned()
+                );
+            }
             // Found text
             Some(string) => match string.parse() {
-                Ok(v) => v,                                                     // Can parse
-                Err(_) => return Err(format!("Invalid number \"{}\"", string)), // Cant parse
+                Ok(v) => v, // Can parse
+                Err(_) => {
+                    return Err(format!("Invalid number \"{}\"", string));
+                } // Cant parse
             },
         };
 
         // Check theirs more text
         if parts.peek().is_none() {
-            return Err("Incomplete request: Expected a team".to_owned()) // No more text
+            return Err("Incomplete request: Expected a team".to_owned()); // No more text
         }
 
         // Join everything else into a team.
@@ -212,13 +242,19 @@ impl Drop for BuisnessMan {
 
             // Get file
             let mut file = match File::create(&path) {
-                Err(why) => panic!("couldn't create {}: {}", display, why.description()),
+                Err(why) => {
+                    panic!("couldn't create {}: {}", display, why.description())
+                }
                 Ok(file) => file,
             };
 
             // Write the data to the file
             match file.write_all(&json_self) {
-                Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
+                Err(why) => panic!(
+                    "couldn't write to {}: {}",
+                    display,
+                    why.description()
+                ),
                 Ok(_) => println!("successfully wrote to {}", display),
             }
         }
