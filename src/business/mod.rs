@@ -118,8 +118,7 @@ impl BuisnessMan {
                     // Remove the donnars
                     user_entry.dollars += total_prices;
                     // Add the shares
-                    let num_shars: &mut u64 =
-                        user_entry.shares.entry(name.clone()).or_insert(0);
+                    let num_shars: &mut u64 = user_entry.shares.entry(name.clone()).or_insert(0);
                     *num_shars -= u64::from(num);
 
                     // Return the message
@@ -171,7 +170,7 @@ impl BuisnessMan {
     fn parse_buy_sell(mess: &str) -> Result<(u16, String), String> {
         // Normalise message
         let mess_lc = mess.to_lowercase();
-        let mut parts = mess_lc.split(' ');
+        let mut parts = mess_lc.split(' ').peekable();
 
         // Skip over !buy / !sell
         parts.next().unwrap();
@@ -187,17 +186,15 @@ impl BuisnessMan {
             },
         };
 
-        // Get a string name
-        let name: &str = match parts.next() {
-            None => return Err("Incomplete request: Expected a team".to_owned()), // No more text
-            Some(v) => v,                                                         // More text
-        };
-
-        // Check their's nothing left
-        if let Some(v) = parts.next() {
-            return Err(format!("Unexpected text: \"{}\"", v));
+        // Check theirs more text
+        if parts.peek().is_none() {
+            return Err("Incomplete request: Expected a team".to_owned()) // No more text
         }
-Ok((num, name.to_string()))
+
+        // Join everything else into a team.
+        let name = parts.collect::<Vec<_>>().join("-");
+
+        Ok((num, name))
     }
 }
 
