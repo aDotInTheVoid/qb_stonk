@@ -46,7 +46,7 @@ pub(super) fn parse_groger_post(post: &str) -> Option<HashMap<String, (u16, f32)
         }
 
         let mut name = elems[1].to_lowercase().replace(" ", "-");
-        name.truncate(name.len()-5);
+        name.truncate(name.len() - 5);
         name.shrink_to_fit();
         let rank: u16 = e2none(elems[0].parse()).unwrap();
         let weight: f32 = e2none(elems[2].parse()).unwrap();
