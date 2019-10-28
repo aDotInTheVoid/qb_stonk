@@ -94,7 +94,7 @@ impl EventHandler for Handler {
         // arrival.
         if let Err(why) = TRADES_ID.say(
             &ctx.http,
-            "@e_veryone THE MARKET IS OPEN, GET YOUR STONKS (not realy)",
+            "@here The market is now open.",
         ) {
             println!("Error sending message: {:?}", why);
         }
