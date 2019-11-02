@@ -261,6 +261,19 @@ impl Drop for BuisnessMan {
     }
 }
 
+impl Portfolio {
+    pub fn value(&self, prices: &HashMap<String, f64>) -> f64 {
+        let mut ret = self.dollars;
+        for (name, quantity) in &self.shares {
+            ret += *quantity as f64 * prices.get(name).unwrap_or(&0.0)
+        }
+        ret
+    }
+    pub fn cash(&self) -> f64 {
+        self.dollars
+    }
+}
+
 fn display_shares(vals: &HashMap<String, u64>) -> String {
     let mut lines: Vec<String> = Vec::with_capacity(vals.len());
     for (i, j) in vals {

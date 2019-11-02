@@ -1,4 +1,7 @@
-use std::sync::{Arc, Barrier};
+use std::{
+    cmp::Ordering::*,
+    sync::{Arc, Barrier},
+};
 
 use serenity::{
     model::{channel::Message, gateway::Ready, id::ChannelId},
@@ -109,7 +112,7 @@ impl EventHandler for Handler {
         let mut prices = bml.prices.iter().collect::<Vec<(_, _)>>();
 
         // Sort prices
-        prices.sort_by(|a, b| a.1.partial_cmp(b.1).expect("FLOAT HELL"));
+        prices.sort_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(Equal));
 
         // Buffer for uploading
         let mut content = String::with_capacity(2000);
@@ -117,7 +120,7 @@ impl EventHandler for Handler {
         // Loop over prices
         for (name, price) in prices {
             // Add a stonk
-            content.push_str(&format!("**_{}_**: {:.2}\n", name, price));
+            content.push_str(&format!("**_{}_**: {:.2}\n", name.replace("-", " "), price));
             // If were about to exceed the message limit (2048)
             if content.len() > 1900 {
                 // Send what we have
@@ -128,14 +131,56 @@ impl EventHandler for Handler {
                 content.clear();
             }
         }
+        if content.len() != 0{
         // Send the rest
         if let Err(why) = PRICES_ID.say(&ctx.http, &content) {
             println!("Error sending message: {:?}", why);
         }
+        }
 
         // Update the leaderboard
         let mut traders = bml.traders.iter().collect::<Vec<(_, _)>>();
-        
+        traders.sort_by(|a, b| {
+            let (a_val, b_val) =
+                (a.1.value(&bml.prices), b.1.value(&bml.prices));
+            let (a_dol, b_dol) = (a.1.cash(), b.1.cash());
+
+            a_val
+                .partial_cmp(&b_val)
+                .unwrap_or(Equal)
+                .then(b_dol.partial_cmp(&a_dol).unwrap_or(Equal))
+                .reverse()
+        });
+
+        let t2 = traders.iter().map(|x| (x.0, x.1.value(&bml.prices)));
+        let t3 = t2
+            .map(|y| {
+                (
+                    match ctx.http.get_user(*y.0.as_u64()) {
+                        Ok(u) => u.name,
+                        Err(_) => String::from("[unclear]"),
+                    },
+                    y.1,
+                )
+            }).collect::<Vec<_>>();
+
+        content.clear();
+        let mut i = 1;
+        for (user, money) in t3 {
+            
+            content.push_str(&format!("{}. **_{}_**: {:.2}\n",i, user, money));
+            if content.len() > 1900 {
+                if let Err(why) = LEADERBOARD_ID.say(&ctx.http, &content) {
+                    println!("Error sending message: {:?}", why);
+                }
+                content.clear()
+            }
+            i+=1;
+        }
+        if content.len() != 0 {
+        if let Err(why) = LEADERBOARD_ID.say(&ctx.http, &content) {
+            println!("Error sending message: {:?}", why);
+        }}
 
         // Tell main thread were done.
         data.get::<BarrierManager>().unwrap().wait();
