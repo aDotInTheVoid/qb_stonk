@@ -12,6 +12,8 @@ pub(crate) use self::shutdown_sender::shutdown_msg as send_sd_msg;
 
 // TODO: load dynamicly
 const TRADES_ID: ChannelId = ChannelId(603_769_735_867_400_193);
+const LEADERBOARD_ID: ChannelId = ChannelId(603_772_537_809_272_833);
+const PRICES_ID: ChannelId = ChannelId(603_772_502_484_713_472);
 
 pub(crate) struct Handler;
 pub(crate) struct BarrierManager;
@@ -92,14 +94,50 @@ impl EventHandler for Handler {
 
         // Send message to server anounsing our
         // arrival.
-        if let Err(why) = TRADES_ID.say(
-            &ctx.http,
-            "@investor The market is now open.",
-        ) {
+        if let Err(why) =
+            TRADES_ID.say(&ctx.http, "@investor The market is now open.")
+        {
             println!("Error sending message: {:?}", why);
         }
 
+        // Update prices
+
+        // Get variables
+        let data = ctx.data.read();
+        let bm = data.get::<BuisnessManManager>().unwrap();
+        let bml = bm.lock();
+        let mut prices = bml.prices.iter().collect::<Vec<(_, _)>>();
+
+        // Sort prices
+        prices.sort_by(|a, b| a.1.partial_cmp(b.1).expect("FLOAT HELL"));
+
+        // Buffer for uploading
+        let mut content = String::with_capacity(2000);
+
+        // Loop over prices
+        for (name, price) in prices {
+            // Add a stonk
+            content.push_str(&format!("**_{}_**: {:.2}\n", name, price));
+            // If were about to exceed the message limit (2048)
+            if content.len() > 1900 {
+                // Send what we have
+                if let Err(why) = PRICES_ID.say(&ctx.http, &content) {
+                    println!("Error sending message: {:?}", why);
+                }
+                //Start afresh
+                content.clear();
+            }
+        }
+        // Send the rest
+        if let Err(why) = PRICES_ID.say(&ctx.http, &content) {
+            println!("Error sending message: {:?}", why);
+        }
+
+        // Update the leaderboard
+        let mut traders = bml.traders.iter().collect::<Vec<(_, _)>>();
+        
+
         // Tell main thread were done.
-        ctx.data.read().get::<BarrierManager>().unwrap().wait();
+        data.get::<BarrierManager>().unwrap().wait();
     }
 }
