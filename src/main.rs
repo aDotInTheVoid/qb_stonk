@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use std::{
     env,
     io::{stdin, stdout, Write},

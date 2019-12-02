@@ -120,7 +120,11 @@ impl EventHandler for Handler {
         // Loop over prices
         for (name, price) in prices {
             // Add a stonk
-            content.push_str(&format!("**_{}_**: {:.2}\n", name.replace("-", " "), price));
+            content.push_str(&format!(
+                "**_{}_**: {:.2}\n",
+                name.replace("-", " "),
+                price
+            ));
             // If were about to exceed the message limit (2048)
             if content.len() > 1900 {
                 // Send what we have
@@ -131,11 +135,11 @@ impl EventHandler for Handler {
                 content.clear();
             }
         }
-        if content.len() != 0{
-        // Send the rest
-        if let Err(why) = PRICES_ID.say(&ctx.http, &content) {
-            println!("Error sending message: {:?}", why);
-        }
+        if content.is_empty() {
+            // Send the rest
+            if let Err(why) = PRICES_ID.say(&ctx.http, &content) {
+                println!("Error sending message: {:?}", why);
+            }
         }
 
         // Update the leaderboard
@@ -162,25 +166,26 @@ impl EventHandler for Handler {
                     },
                     y.1,
                 )
-            }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
 
         content.clear();
         let mut i = 1;
         for (user, money) in t3 {
-            
-            content.push_str(&format!("{}. **_{}_**: {:.2}\n",i, user, money));
+            content.push_str(&format!("{}. **_{}_**: {:.2}\n", i, user, money));
             if content.len() > 1900 {
                 if let Err(why) = LEADERBOARD_ID.say(&ctx.http, &content) {
                     println!("Error sending message: {:?}", why);
                 }
                 content.clear()
             }
-            i+=1;
+            i += 1;
         }
-        if content.len() != 0 {
-        if let Err(why) = LEADERBOARD_ID.say(&ctx.http, &content) {
-            println!("Error sending message: {:?}", why);
-        }}
+        if content.is_empty() {
+            if let Err(why) = LEADERBOARD_ID.say(&ctx.http, &content) {
+                println!("Error sending message: {:?}", why);
+            }
+        }
 
         // Tell main thread were done.
         data.get::<BarrierManager>().unwrap().wait();
